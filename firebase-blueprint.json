@@ -1,0 +1,223 @@
+{
+  "entities": {
+    "UserProfile": {
+      "title": "UserProfile",
+      "description": "User account profile with role assignment",
+      "type": "object",
+      "properties": {
+        "name": { "type": "string", "maxLength": 100 },
+        "email": { "type": "string", "maxLength": 120 },
+        "role": { "type": "string", "enum": ["admin", "capitan", "arbitro", "visitante"] },
+        "team": { "type": "string", "maxLength": 128 },
+        "ref": { "type": "string", "maxLength": 128 },
+        "playerId": { "type": "string", "maxLength": 128 },
+        "photoURL": { "type": "string", "maxLength": 500 }
+      },
+      "required": ["email", "role"]
+    },
+    "Team": {
+      "title": "Team",
+      "description": "Football team profile",
+      "type": "object",
+      "properties": {
+        "name": { "type": "string", "maxLength": 100 },
+        "mod": { "type": "string", "enum": ["F5", "F7", "F11"] },
+        "cat": { "type": "string", "enum": ["Masculino", "Femenino", "Mixto"] },
+        "foto": { "type": "string", "maxLength": 50000 }
+      },
+      "required": ["name", "mod"]
+    },
+    "Player": {
+      "title": "Player",
+      "description": "Registered player details",
+      "type": "object",
+      "properties": {
+        "name": { "type": "string", "maxLength": 100 },
+        "team": { "type": "string", "maxLength": 128 },
+        "dorsal": { "type": "number" },
+        "pos": { "type": "string", "maxLength": 20 },
+        "sec": { "type": "array" },
+        "foto": { "type": "string", "maxLength": 50000 },
+        "cedula": { "type": "string", "maxLength": 30 },
+        "userId": { "type": "string", "maxLength": 128 }
+      },
+      "required": ["name"]
+    },
+    "Referee": {
+      "title": "Referee",
+      "description": "Match official details",
+      "type": "object",
+      "properties": {
+        "name": { "type": "string", "maxLength": 100 },
+        "playerId": { "type": "string", "maxLength": 128 },
+        "ok": { "type": "boolean" },
+        "fed": { "type": "boolean" }
+      },
+      "required": ["name"]
+    },
+    "Venue": {
+      "title": "Venue",
+      "description": "Pitch/stadium location details",
+      "type": "object",
+      "properties": {
+        "name": { "type": "string", "maxLength": 100 },
+        "addr": { "type": "string", "maxLength": 200 },
+        "mods": { "type": "array" },
+        "surf": { "type": "string", "maxLength": 50 },
+        "lights": { "type": "boolean" }
+      },
+      "required": ["name"]
+    },
+    "Match": {
+      "title": "Match",
+      "description": "Match fixture and score sheet",
+      "type": "object",
+      "properties": {
+        "a": { "type": "string", "maxLength": 128 },
+        "b": { "type": "string", "maxLength": 128 },
+        "date": { "type": "string", "maxLength": 20 },
+        "time": { "type": "string", "maxLength": 10 },
+        "venue": { "type": "string", "maxLength": 128 },
+        "mod": { "type": "string", "maxLength": 20 },
+        "sede": { "type": "string", "maxLength": 20 },
+        "ref": { "type": "string", "maxLength": 128 },
+        "played": { "type": "boolean" },
+        "resultRecordedAt": { "type": "number" }
+      },
+      "required": ["a", "b"]
+    },
+    "Transfer": {
+      "title": "Transfer",
+      "description": "Historical player movement",
+      "type": "object",
+      "properties": {
+        "p": { "type": "string", "maxLength": 128 },
+        "from": { "type": "string", "maxLength": 128 },
+        "to": { "type": "string", "maxLength": 128 },
+        "date": { "type": "string", "maxLength": 20 }
+      },
+      "required": ["p", "to", "date"]
+    },
+    "Tournament": {
+      "title": "Tournament",
+      "description": "League or cup competition",
+      "type": "object",
+      "properties": {
+        "name": { "type": "string", "maxLength": 120 },
+        "mod": { "type": "string", "maxLength": 20 },
+        "cat": { "type": "string", "maxLength": 20 },
+        "fmt": { "type": "string", "maxLength": 20 },
+        "estado": { "type": "string", "maxLength": 30 }
+      },
+      "required": ["name", "mod", "fmt"]
+    },
+    "PlayerClaim": {
+      "title": "PlayerClaim",
+      "description": "Request by a user to claim their player identity in a team",
+      "type": "object",
+      "properties": {
+        "userId": { "type": "string", "maxLength": 128 },
+        "userName": { "type": "string", "maxLength": 100 },
+        "userEmail": { "type": "string", "maxLength": 120 },
+        "playerId": { "type": "string", "maxLength": 128 },
+        "playerName": { "type": "string", "maxLength": 100 },
+        "teamId": { "type": "string", "maxLength": 128 },
+        "status": { "type": "string", "enum": ["pend", "approved", "rejected"] }
+      },
+      "required": ["userId", "playerId", "status"]
+    },
+    "PeerRating": {
+      "title": "PeerRating",
+      "description": "Teammate peer skill evaluation",
+      "type": "object",
+      "properties": {
+        "fromUserId": { "type": "string", "maxLength": 128 },
+        "fromPlayerId": { "type": "string", "maxLength": 128 },
+        "toPlayerId": { "type": "string", "maxLength": 128 },
+        "teamId": { "type": "string", "maxLength": 128 }
+      },
+      "required": ["fromUserId", "toPlayerId", "teamId"]
+    },
+    "MvpVote": {
+      "title": "MvpVote",
+      "description": "Democratic MVP vote cast by a match participant",
+      "type": "object",
+      "properties": {
+        "matchId": { "type": "string", "maxLength": 128 },
+        "voterUserId": { "type": "string", "maxLength": 128 },
+        "votedPlayerId": { "type": "string", "maxLength": 128 }
+      },
+      "required": ["matchId", "voterUserId", "votedPlayerId"]
+    }
+  },
+  "firestore": {
+    "/users/{userId}": {
+      "schema": "UserProfile",
+      "description": "Application user profiles and role allocations"
+    },
+    "/teams/{teamId}": {
+      "schema": "Team",
+      "description": "Football teams in the association"
+    },
+    "/players/{playerId}": {
+      "schema": "Player",
+      "description": "Players registered in the league"
+    },
+    "/referees/{refereeId}": {
+      "schema": "Referee",
+      "description": "Referees registered in the league"
+    },
+    "/venues/{venueId}": {
+      "schema": "Venue",
+      "description": "Pitches and sports venues"
+    },
+    "/matches/{matchId}": {
+      "schema": "Match",
+      "description": "League and tournament matches and match sheets"
+    },
+    "/transfers/{transferId}": {
+      "schema": "Transfer",
+      "description": "Player transfer history records"
+    },
+    "/torneos/{torneoId}": {
+      "schema": "Tournament",
+      "description": "Tournament fixtures, standings, and brackets"
+    },
+    "/trainings/{trainingId}": {
+      "schema": { "$ref": "#/entities/Match" },
+      "description": "Team internal training sessions"
+    },
+    "/solicitudes/{solicitudId}": {
+      "schema": { "$ref": "#/entities/Transfer" },
+      "description": "Player transfer requests between teams"
+    },
+    "/reportes/{reporteId}": {
+      "schema": { "$ref": "#/entities/Match" },
+      "description": "Match score reports submitted by captains/referees"
+    },
+    "/propuestas/{propuestaId}": {
+      "schema": { "$ref": "#/entities/Tournament" },
+      "description": "Tournament invitations and proposals"
+    },
+    "/auditoria/{auditId}": {
+      "schema": { "$ref": "#/entities/Transfer" },
+      "description": "Audit logs of administrative actions"
+    },
+    "/cedulas/{cedulaHash}": {
+      "schema": { "$ref": "#/entities/Player" },
+      "description": "Unique player identification index to prevent duplicate registrations"
+    },
+    "/player_claims/{claimId}": {
+      "schema": "PlayerClaim",
+      "description": "User requests claiming their registered player profile"
+    },
+    "/peer_ratings/{ratingId}": {
+      "schema": "PeerRating",
+      "description": "Teammate anonymous skill ratings"
+    },
+    "/mvp_votes/{voteId}": {
+      "schema": "MvpVote",
+      "description": "Democratic votes cast by match participants to elect the MVP"
+    }
+  }
+}

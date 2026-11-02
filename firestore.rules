@@ -1,0 +1,192 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Helper functions
+    function isSignedIn() {
+      return request.auth != null;
+    }
+    
+    function isSuperAdmin() {
+      return isSignedIn() && (
+        request.auth.token.email.lower() == 'jorgeskape10@gmail.com' ||
+        exists(/databases/$(database)/documents/admins/$(request.auth.uid))
+      );
+    }
+
+    function getUserData() {
+      return get(/databases/$(database)/documents/users/$(request.auth.uid)).data;
+    }
+
+    function isAdmin() {
+      return isSuperAdmin() || (isSignedIn() && exists(/databases/$(database)/documents/users/$(request.auth.uid)) && getUserData().role == 'admin');
+    }
+
+    function isCaptainOf(teamId) {
+      return isAdmin() || (isSignedIn() && exists(/databases/$(database)/documents/users/$(request.auth.uid)) && getUserData().role == 'capitan' && getUserData().team == teamId);
+    }
+
+    function isRefereeOf(refId) {
+      return isAdmin() || (isSignedIn() && exists(/databases/$(database)/documents/users/$(request.auth.uid)) && getUserData().role == 'arbitro' && getUserData().ref == refId);
+    }
+
+    // Default deny
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    // Admins collection
+    match /admins/{adminId} {
+      allow read: if isSignedIn();
+      allow write: if isSuperAdmin();
+    }
+
+    // Users collection
+    match /users/{userId} {
+      allow read: if isSignedIn();
+      allow create: if isSignedIn() && request.auth.uid == userId && (
+        (request.resource.data.role == 'visitante') ||
+        (isSuperAdmin() && request.resource.data.role == 'admin')
+      );
+      allow update: if isSignedIn() && (
+        isAdmin() ||
+        (request.auth.uid == userId &&
+         !request.resource.data.diff(resource.data).affectedKeys().hasAny(['role', 'team', 'ref', 'playerId']))
+      );
+      allow delete: if isAdmin();
+    }
+
+    // Teams collection
+    match /teams/{teamId} {
+      allow read: if true;
+      allow create, delete: if isAdmin();
+      allow update: if isAdmin() || isCaptainOf(teamId);
+    }
+
+    // Players collection
+    match /players/{playerId} {
+      allow read: if true;
+      allow create: if isAdmin() || (
+        request.resource.data.team != '' && isCaptainOf(request.resource.data.team)
+      );
+      allow update: if isAdmin() || (
+        resource.data.team != '' && isCaptainOf(resource.data.team)
+      ) || (
+        resource.data.team == '' && request.resource.data.team != '' && isCaptainOf(request.resource.data.team)
+      ) || (
+        // Allow the claimed/linked player to update their photo
+        isSignedIn() && (
+          (resource.data.userId == request.auth.uid) ||
+          (exists(/databases/$(database)/documents/users/$(request.auth.uid)) && getUserData().playerId == playerId)
+        ) && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['foto'])
+      );
+      allow delete: if isAdmin();
+    }
+
+    // Referees collection
+    match /referees/{refereeId} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+
+    // Venues / Canchas collection
+    match /venues/{venueId} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+
+    // Matches collection
+    match /matches/{matchId} {
+      allow read: if true;
+      allow create, delete: if isAdmin();
+      allow update: if isAdmin() || (
+        resource.data.ref != '' && isRefereeOf(resource.data.ref)
+      ) || (
+        (resource.data.a != '' && isCaptainOf(resource.data.a)) ||
+        (resource.data.b != '' && isCaptainOf(resource.data.b))
+      );
+    }
+
+    // Transfers collection
+    match /transfers/{transferId} {
+      allow read: if true;
+      allow create: if isSignedIn();
+      allow update, delete: if isAdmin();
+    }
+
+    // Torneos collection
+    match /torneos/{torneoId} {
+      allow read: if true;
+      allow create, update, delete: if isAdmin();
+    }
+
+    // Trainings collection
+    match /trainings/{trainingId} {
+      allow read: if true;
+      allow create, update, delete: if isAdmin() || (
+        request.resource.data.team != '' && isCaptainOf(request.resource.data.team)
+      ) || (
+        resource.data.team != '' && isCaptainOf(resource.data.team)
+      );
+    }
+
+    // Solicitudes de fichaje
+    match /solicitudes/{solicitudId} {
+      allow read: if isSignedIn();
+      allow create: if isSignedIn();
+      allow update, delete: if isAdmin() || (
+        resource.data.from != '' && isCaptainOf(resource.data.from)
+      ) || (
+        resource.data.to != '' && isCaptainOf(resource.data.to)
+      );
+    }
+
+    // Reportes de partidos
+    match /reportes/{reporteId} {
+      allow read: if isSignedIn();
+      allow create, update: if isSignedIn();
+      allow delete: if isAdmin();
+    }
+
+    // Propuestas de torneos
+    match /propuestas/{propuestaId} {
+      allow read: if isSignedIn();
+      allow create, update: if isSignedIn();
+      allow delete: if isAdmin();
+    }
+
+    // Auditoria collection
+    match /auditoria/{auditId} {
+      allow read: if isAdmin();
+      allow create: if isSignedIn();
+      allow update, delete: if false;
+    }
+
+    // Cedulas collection
+    match /cedulas/{cedulaHash} {
+      allow read: if isSignedIn();
+      allow write: if isSignedIn();
+    }
+
+    // Player Claims: Requests by users to claim their player identity
+    match /player_claims/{claimId} {
+      allow read: if isSignedIn();
+      allow create: if isSignedIn() && request.resource.data.userId == request.auth.uid;
+      allow update: if isAdmin();
+      allow delete: if isAdmin();
+    }
+
+    // Peer Ratings: Teammates rating teammates (anonymous to users, admin can see all)
+    match /peer_ratings/{ratingId} {
+      allow read: if isSignedIn();
+      allow create, update: if isSignedIn() && request.resource.data.fromUserId == request.auth.uid;
+      allow delete: if isAdmin();
+    }
+
+    // Democratic MVP Votes
+    match /mvp_votes/{voteId} {
+      allow read: if isSignedIn();
+      allow create, update: if isSignedIn() && request.resource.data.voterUserId == request.auth.uid;
+      allow delete: if isAdmin();
+    }
+  }
+}

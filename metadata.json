@@ -1,0 +1,6 @@
+{
+  "name": "KAPE A.F. - Asociación de Fútbol",
+  "description": "Plataforma de gestión de liga de fútbol KAPE A.F. con acceso Google, gestión de roles de administrador, capitanes, árbitros y visitantes, actas digitales, ranking y torneos.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
